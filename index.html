@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Run Leo">
+<meta name="theme-color" content="#0F1923">
+<link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22Run%20Leo%22%2C%22short_name%22%3A%22Run%20Leo%22%2C%22description%22%3A%22Plan%20hibrid%20running%20si%20fitness%202026-2027%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230F1923%22%2C%22theme_color%22%3A%22%230F1923%22%2C%22orientation%22%3A%22portrait%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%253D%2527http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2527%2520viewBox%253D%25270%25200%2520100%2520100%2527%253E%253Crect%2520width%253D%2527100%2527%2520height%253D%2527100%2527%2520rx%253D%252720%2527%2520fill%253D%2527%25230F1923%2527%252F%253E%253Ctext%2520y%253D%2527.9em%2527%2520font-size%253D%252780%2527%2520x%253D%252710%2527%253E%25F0%259F%258F%2583%253C%252Ftext%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%20maskable%22%7D%5D%7D">
+<title>Run Leo</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#0F1923; --card:#1A2332; --card2:#212E40; --border:#2A3A50;
+  --coral:#FF5F57; --blue:#2D9CDB; --mint:#00C896; --yellow:#FFB800; --orange:#FF8A3D;
+  --purple:#9B59B6; --white:#F8F9FA; --text:#E8EDF2; --muted:#6B7F94; --light:#B0BEC5;
+  --current-blue:#1F4E79;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{background:var(--navy);color:var(--text);font-family:'Nunito',sans-serif;min-height:100vh;padding-bottom:72px;overflow-x:hidden;}
+.chart-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.current-period{box-shadow:inset 0 0 0 2px var(--current-blue),0 0 0 1px rgba(45,156,219,0.22)!important;}
+
+.bnav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom);}
+.bnav-btn{flex:1;padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:none;color:var(--muted);cursor:pointer;font-family:'Nunito',sans-serif;font-size:10px;font-weight:700;transition:color 0.2s;}
+.bnav-btn.on{color:var(--coral);}
+.bnav-icon{font-size:22px;line-height:1;}
+
+.page{display:none;min-height:calc(100vh - 72px);}
+.page.on{display:block;}
+
+.hero{background:linear-gradient(135deg,#1A2B3C 0%,#0F1923 100%);padding:20px 16px 16px;}
+.hero-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:4px;}
+.hero-title{font-size:28px;font-weight:900;color:var(--white);line-height:1.1;}
+.hero-title span{color:var(--coral);}
+.hero-sub{font-size:13px;color:var(--muted);margin-top:4px;}
+
+.today-hero{border-radius:20px;padding:20px;margin:16px 16px 12px;position:relative;overflow:hidden;}
+.today-hero::before{content:'';position:absolute;top:-20px;right:-20px;width:120px;height:120px;background:rgba(255,255,255,0.08);border-radius:50%;}
+.today-label{font-size:11px;font-weight:800;color:rgba(255,255,255,0.75);text-transform:uppercase;letter-spacing:2px;margin-bottom:6px;}
+.today-title{font-size:26px;font-weight:900;color:#fff;margin-bottom:4px;line-height:1.1;}
+.workout-name-button{border:0;background:transparent;padding:0;color:inherit;font-family:'Nunito',sans-serif;font-weight:inherit;line-height:inherit;text-align:left;cursor:pointer;text-decoration:underline;text-decoration-color:rgba(255,255,255,0.72);text-decoration-thickness:2px;text-underline-offset:4px;}
+.workout-name-button::after{content:' ›';white-space:nowrap;}
+.workout-name-button:active{transform:scale(0.985);opacity:0.85;}
+.today-title.workout-name-button{display:block;font-size:26px;}
+.day-badge-text .workout-name-button{font-size:15px;}
+.today-meta{font-size:13px;color:rgba(255,255,255,0.75);margin-bottom:14px;}
+.today-btns{display:flex;gap:8px;flex-wrap:wrap;position:relative;z-index:1;}
+
+.btn{font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;padding:10px 16px;border-radius:12px;border:none;cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px;}
+.btn:active{transform:scale(0.96);}
+.btn-white{background:#fff;color:var(--coral);}
+.btn-ghost{background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.3);}
+.btn-mint{background:var(--mint);color:#fff;}
+.btn-blue{background:var(--blue);color:#fff;}
+.btn-card{background:var(--card2);color:var(--light);border:1px solid var(--border);}
+.btn-outline-coral{background:transparent;color:var(--coral);border:2px solid var(--coral);}
+.btn-sm{padding:7px 12px;font-size:12px;border-radius:10px;}
+.btn-icon{width:36px;height:36px;padding:0;border-radius:10px;justify-content:center;font-size:17px;}
+
+.metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:0 16px;margin-bottom:12px;}
+.metric-card{border-radius:14px;padding:14px 8px;text-align:center;min-width:0;box-shadow:0 6px 16px rgba(0,0,0,0.12);}
+.metric-card.metric-coral{background:linear-gradient(135deg,#FF5F57,#FF8A65);}
+.metric-card.metric-mint{background:linear-gradient(135deg,#00A676,#00C896);}
+.metric-card.metric-blue{background:linear-gradient(135deg,#1E6FA8,#2D9CDB);}
+.metric-val{font-family:'DM Mono',monospace;font-size:22px;font-weight:700;line-height:1;margin-bottom:4px;color:#fff;}
+.metric-label{font-size:9px;font-weight:800;color:rgba(255,255,255,0.82);text-transform:uppercase;letter-spacing:0.7px;white-space:nowrap;}
+.today-fitness-widget{display:block;width:calc(100% - 32px);margin:0 16px 12px;padding:14px 15px;border:1px solid rgba(45,156,219,.38);border-radius:15px;background:linear-gradient(135deg,rgba(30,58,95,.96),rgba(15,25,35,.98));color:var(--white);font-family:'Nunito',sans-serif;text-align:left;cursor:pointer;}
+.today-fitness-top{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.today-fitness-title{font-size:13px;font-weight:900;color:var(--blue);text-transform:uppercase;letter-spacing:.8px;}
+.today-fitness-total{font-family:'DM Mono',monospace;font-size:20px;font-weight:900;color:var(--mint);white-space:nowrap;}
+.today-fitness-meta{display:flex;align-items:center;gap:13px;margin-top:7px;font-size:11px;color:var(--light);font-weight:800;}
+.today-fitness-track{height:6px;background:var(--border);border-radius:5px;overflow:hidden;margin-top:10px;}
+.today-fitness-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--mint));border-radius:5px;}
+.today-fitness-hint{font-size:10px;color:var(--muted);margin-top:7px;display:flex;justify-content:space-between;}
+
+.logged-pill{background:rgba(0,200,150,0.1);border:1px solid rgba(0,200,150,0.25);border-radius:12px;padding:10px 14px;margin:0 16px 12px;}
+.logged-row{font-family:'DM Mono',monospace;font-size:12px;color:var(--mint);line-height:1.9;}
+
+.pu-card{background:var(--card);border-radius:16px;padding:16px;margin:0 16px 12px;}
+.pu-top{display:block;margin-bottom:8px;}
+.pu-top .subworkout-actions{margin-top:10px;justify-content:flex-start;}
+.pu-badge{font-size:32px;font-weight:900;color:var(--yellow);font-family:'DM Mono',monospace;}
+.pu-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px;}
+
+.week-strip{display:flex;gap:8px;overflow-x:auto;padding:0 16px 4px;margin-bottom:14px;scrollbar-width:none;}
+.week-strip::-webkit-scrollbar{display:none;}
+.wchip{flex-shrink:0;padding:8px 14px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;border:2px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;transition:all 0.2s;}
+.wchip.on{background:var(--coral);border-color:var(--coral);color:#fff;}
+.wchip.done{background:rgba(0,200,150,0.15);border-color:rgba(0,200,150,0.4);color:var(--mint);}
+.wchip.current-period{background:rgba(45,156,219,0.28);border-color:var(--current-blue);color:#fff;box-shadow:0 0 0 2px rgba(45,156,219,0.22),0 0 14px rgba(45,156,219,0.28)!important;}
+.wchip.on.current-period{background:var(--current-blue);border-color:#72C7F4;color:#fff;box-shadow:0 0 0 2px rgba(114,199,244,0.3),0 0 16px rgba(45,156,219,0.45)!important;}
+
+.days-list{padding:0 16px;display:flex;flex-direction:column;gap:8px;}
+.day-card{background:var(--card);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;border:2px solid transparent;}
+.day-card[data-plan-day-id]{scroll-margin-top:8px;}
+.day-card.today{border-color:var(--current-blue);background:rgba(31,78,121,0.12);}
+.day-card.done{border-color:rgba(0,200,150,0.3);background:rgba(0,200,150,0.04);}
+.day-date-block{min-width:40px;text-align:center;}
+.day-dow{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+.day-num{font-size:26px;font-weight:900;color:var(--white);line-height:1;}
+.day-card.today .day-num{color:var(--coral);}
+.day-content{flex:1;min-width:0;}
+.day-badge-text{font-size:15px;font-weight:800;margin-bottom:2px;}
+.day-meta-text{font-size:12px;color:var(--muted);}
+.day-run-result{font-size:11px;font-family:'DM Mono',monospace;color:var(--mint);margin-top:2px;}
+.day-pu-mini{font-size:11px;color:var(--yellow);margin-top:2px;font-weight:700;}
+.strides-subworkout{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:7px;padding:7px 8px;border-radius:8px;background:rgba(255,95,87,0.10);border:1px solid rgba(255,95,87,0.30);}
+.strides-name-button{border:0;background:transparent;padding:0;color:var(--coral);font-family:'Nunito',sans-serif;font-size:12px;font-weight:900;text-align:left;cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
+.strides-import-button{border:1px solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.08);color:var(--white);border-radius:7px;padding:5px 8px;font-size:11px;font-weight:800;white-space:nowrap;cursor:pointer;}
+.today-strides-card{margin:0 16px 12px;padding:12px 14px;border-radius:14px;background:var(--card);border-left:4px solid var(--coral);display:block;}
+.today-strides-card .subworkout-actions{margin-top:10px;justify-content:flex-start;}
+.pushups-subworkout{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:5px;padding:7px 8px;border-radius:8px;background:rgba(255,184,0,0.09);border:1px solid rgba(255,184,0,0.28);}
+.fitness-subworkout{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:7px;padding:8px 9px;border-radius:9px;background:rgba(0,200,150,0.09);border:1px solid rgba(0,200,150,0.3);}
+.fitness-subworkout button{border:0;background:transparent;padding:0;color:var(--mint);font-family:'Nunito',sans-serif;font-size:12px;font-weight:900;text-align:left;cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
+.coach-phase-card{background:linear-gradient(135deg,rgba(30,111,168,.2),rgba(0,200,150,.1));border:1px solid rgba(45,156,219,.45);border-radius:14px;padding:14px;margin:0 0 4px;color:var(--light);font-size:12px;line-height:1.5;}
+.subworkout-actions{display:flex;gap:5px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
+.day-actions{display:flex;gap:6px;flex-direction:column;align-items:flex-end;}
+.day-card.plan-clear{align-items:flex-start;padding:12px;}
+.day-card.plan-clear .day-date-block{padding-top:5px;position:sticky;top:0;}
+.plan-day-stack{display:grid;gap:8px;width:100%;}
+.plan-activity{--activity-color:var(--blue);background:rgba(255,255,255,.035);border:1px solid var(--border);border-left:4px solid var(--activity-color);border-radius:11px;padding:10px;min-width:0;}
+.plan-activity.run{--activity-color:var(--blue);background:rgba(45,156,219,.075);}
+.plan-activity.fitness{--activity-color:#FF6FB5;background:rgba(255,111,181,.075);}
+.plan-activity.strides{--activity-color:var(--coral);background:rgba(255,95,87,.075);}
+.plan-activity.pushups{--activity-color:var(--yellow);background:rgba(255,184,0,.07);}
+.plan-activity.rest{--activity-color:var(--muted);}
+.plan-activity-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+.plan-activity-type{font-size:9px;font-weight:900;color:var(--activity-color);text-transform:uppercase;letter-spacing:1.1px;margin-bottom:3px;}
+.plan-activity-title{border:0;background:transparent;padding:0;color:var(--white);font-family:'Nunito',sans-serif;font-size:14px;font-weight:900;text-align:left;cursor:pointer;text-decoration:underline;text-underline-offset:3px;line-height:1.25;}
+.plan-status{font-size:9px;font-weight:900;border-radius:999px;padding:4px 7px;white-space:nowrap;background:rgba(255,255,255,.08);color:var(--muted);}
+.plan-status.done{background:rgba(0,200,150,.15);color:var(--mint);}
+.plan-activity-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.plan-activity-actions .btn{font-size:10px;padding:6px 9px;min-height:30px;}
+.plan-add-run{width:100%;justify-content:center;margin-top:1px;border-style:dashed!important;color:var(--orange)!important;}
+
+.stats-hero{background:linear-gradient(135deg,#1E3A5F 0%,#0F1923 100%);border-radius:20px;padding:20px;margin:16px 16px 12px;}
+.stats-big-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.stat-big{text-align:center;}
+.stat-big-val{font-size:36px;font-weight:900;line-height:1;}
+.stat-big-label{font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;margin-top:3px;}
+.stats-title{font-size:13px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px;}
+.fitness-overview{padding:0 16px 16px;}
+.fitness-widget-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+.fitness-widget{--widget-color:var(--blue);background:var(--card);border:1px solid var(--border);border-top:3px solid var(--widget-color);border-radius:14px;padding:13px;min-height:92px;display:flex;flex-direction:column;justify-content:center;min-width:0;}
+.fitness-widget-value{color:var(--white);font-family:'DM Mono',monospace;font-size:22px;font-weight:800;line-height:1.1;overflow-wrap:anywhere;}
+.fitness-widget-label{color:var(--light);font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.7px;margin-top:7px;}
+.fitness-widget-sub{color:var(--muted);font-size:10px;margin-top:3px;line-height:1.35;}
+.fitness-balance-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:0 16px 10px;}
+.fitness-balance-card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:12px 7px;text-align:center;min-width:0;}
+.fitness-balance-value{font-family:'DM Mono',monospace;font-size:19px;font-weight:800;color:var(--white);}
+.fitness-balance-label{font-size:11px;font-weight:900;margin-top:3px;}
+.fitness-balance-pct{font-size:10px;color:var(--muted);margin-top:2px;}
+.fitness-muscle-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:0 16px 16px;}
+.fitness-muscle-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:11px 12px;min-width:0;}
+.fitness-muscle-name{font-size:12px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fitness-muscle-sets{font-family:'DM Mono',monospace;color:var(--white);font-size:16px;font-weight:800;margin-top:5px;}
+.fitness-note{margin:0 16px 14px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:11px 12px;color:var(--muted);font-size:11px;line-height:1.45;}
+
+.prog-list{padding:0 16px;display:flex;flex-direction:column;gap:8px;}
+.prog-card{background:var(--card);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;}
+.prog-week-label{font-size:13px;font-weight:800;min-width:30px;}
+.prog-bar-wrap{flex:1;background:var(--border);border-radius:6px;height:8px;overflow:hidden;}
+.prog-bar{height:8px;border-radius:6px;}
+.prog-val-text{font-family:'DM Mono',monospace;font-size:12px;color:var(--light);min-width:52px;text-align:right;}
+
+.wk-back{display:flex;align-items:center;gap:8px;padding:16px;cursor:pointer;}
+.wk-back span:first-child{font-size:20px;color:var(--coral);}
+.wk-back span:last-child{font-size:14px;font-weight:700;color:var(--coral);}
+.wk-page-title{font-size:22px;font-weight:900;color:var(--white);padding:0 16px;margin-bottom:16px;line-height:1.2;}
+.wk-section{background:var(--card);border-radius:14px;padding:14px;margin:0 16px 10px;}
+.wk-sec-label{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.wk-steps{display:flex;flex-direction:column;gap:6px;}
+.wk-step{font-size:13px;color:var(--muted);line-height:1.5;padding:8px 12px;background:rgba(255,255,255,0.03);border-radius:8px;border-left:3px solid var(--border);}
+.wk-step.hl{color:var(--text);background:rgba(255,255,255,0.05);border-left-color:var(--blue);}
+.wk-step.key{color:var(--white);font-weight:700;background:rgba(45,156,219,0.1);border-left-color:var(--blue);}
+.fitness-guide-trigger{width:100%;border:1px solid rgba(45,156,219,0.45);background:rgba(45,156,219,0.12);color:var(--white);border-radius:9px;padding:10px 11px;display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;font-family:'Nunito',sans-serif;font-size:13px;font-weight:900;line-height:1.25;cursor:pointer;}
+.fitness-guide-trigger:active{transform:scale(0.985);background:rgba(45,156,219,0.2);}
+.fitness-guide-trigger-hint{color:var(--blue);font-size:11px;font-weight:800;white-space:nowrap;}
+.fitness-guide-description{padding:8px 2px 1px;color:var(--light);font-size:12px;line-height:1.5;}
+.fitness-guide-image{display:block;width:100%;height:auto;border-radius:14px;border:1px solid var(--border);background:var(--navy);}
+.fitness-guide-slice{position:relative;width:100%;overflow:hidden;border-radius:14px;border:1px solid var(--border);background:var(--navy);}
+.fitness-guide-slice .fitness-guide-image{position:absolute;left:0;width:100%;max-width:none;height:auto;border:0;border-radius:0;}
+
+.log-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:flex;align-items:flex-end;justify-content:center;}
+.log-sheet{background:var(--card);border-radius:24px 24px 0 0;width:100%;max-width:500px;padding:20px;max-height:90vh;overflow-y:auto;}
+.log-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;}
+.log-title{font-size:20px;font-weight:900;color:var(--white);margin-bottom:3px;}
+.log-sub{font-size:12px;color:var(--muted);margin-bottom:16px;}
+.log-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.log-field{display:flex;flex-direction:column;gap:4px;}
+.log-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+.log-input{background:var(--navy);border:2px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--white);font-family:'DM Mono',monospace;font-size:15px;outline:none;}
+.log-input:focus{border-color:var(--blue);}
+.log-btns{display:flex;gap:10px;margin-top:16px;}
+.log-btn{flex:1;padding:14px;border:none;border-radius:14px;cursor:pointer;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;}
+.log-save{background:var(--mint);color:#fff;}
+.log-cancel{background:var(--border);color:var(--muted);}
+
+.rule-card{background:var(--card);border-radius:14px;padding:14px;margin:0 16px 10px;display:flex;gap:12px;align-items:flex-start;}
+.rule-icon{font-size:22px;flex-shrink:0;margin-top:1px;}
+.rule-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
+.rule-text{font-size:13px;color:var(--muted);line-height:1.5;}
+.rule-text strong{color:var(--white);}
+.sec-head{padding:14px 16px 8px;font-size:13px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;}
+
+/* Stats sub-tabs */
+.stats-tabs{display:flex;gap:0;margin:0 16px 14px;background:var(--card);border-radius:12px;padding:4px;}
+@media (max-width:600px){.page#page-stats > .stats-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;}.page#page-stats > .stats-tabs .stats-tab{min-width:0;padding:8px 2px;font-size:10px;line-height:1.15;white-space:normal;}}
+.stats-tab{flex:1;padding:8px 4px;border:none;background:none;color:var(--muted);font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer;border-radius:9px;transition:all 0.2s;}
+.stats-tab.on{background:var(--coral);color:#fff;}
+.comp-free-btn.on{background:var(--orange);color:#fff;}
+.extra-run-add{color:var(--orange)!important;border-color:rgba(255,138,61,0.7)!important;background:rgba(255,138,61,0.09)!important;}
+
+/* Run history cards */
+.run-history-month > summary::-webkit-details-marker{display:none;}
+.run-history-chevron{display:inline-block;transition:transform 0.2s ease;}
+.run-history-month[open] .run-history-chevron{transform:rotate(90deg);}
+.fit-exercise-card > summary::-webkit-details-marker{display:none;}
+.fit-exercise-chevron{display:inline-block;transition:transform 0.2s ease;}
+.fit-exercise-card[open] .fit-exercise-chevron{transform:rotate(90deg);}
+.run-hist-card{background:var(--card);border-radius:16px;padding:16px;margin:0 16px 10px;border-left:4px solid transparent;}
+.run-hist-card.z2{border-left-color:var(--blue);}
+.run-hist-card.z3{border-left-color:var(--mint);}
+.run-hist-card.z4{border-left-color:var(--yellow);}
+.run-hist-card.z5{border-left-color:var(--coral);}
+.run-hist-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;}
+.run-hist-date{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+.run-hist-type{font-size:13px;font-weight:800;color:var(--white);margin-top:2px;}
+.run-hist-dist{font-family:'DM Mono',monospace;font-size:28px;font-weight:500;color:var(--coral);line-height:1;}
+.run-hist-dist span{font-size:13px;color:var(--muted);}
+.run-hist-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
+.run-hist-metric{text-align:center;background:rgba(255,255,255,0.03);border-radius:8px;padding:8px 4px;}
+.run-hist-mval{font-family:'DM Mono',monospace;font-size:15px;font-weight:500;line-height:1;margin-bottom:2px;}
+.run-hist-mlabel{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+.run-hist-note{font-size:12px;color:var(--muted);margin-top:8px;font-style:italic;line-height:1.4;}
+
+/* Mini pace chart */
+.pace-chart{margin:0 16px 10px;background:var(--card);border-radius:14px;padding:14px;}
+.pace-chart-title{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;}
+.pace-chart-bars{display:flex;align-items:flex-end;gap:6px;height:64px;}
+.pace-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;}
+.pace-bar{width:100%;border-radius:4px 4px 0 0;transition:height 0.3s;}
+.pace-bar-label{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);white-space:nowrap;text-align:center;}
+.progress-day-button{font:inherit;border:0;padding:2px 0 0;cursor:pointer;-webkit-appearance:none;appearance:none;min-width:0;transition:transform .15s ease,box-shadow .15s ease;}
+.progress-day-button:active{transform:scale(.94);}
+.progress-day-button:focus-visible{outline:2px solid var(--current-blue);outline-offset:2px;}
+.day-card.progress-target{outline:3px solid var(--current-blue);outline-offset:2px;box-shadow:0 0 18px rgba(20,74,120,.55);}
+.sync-status{margin:0 16px 10px;padding:8px 11px;border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;font-weight:800;background:var(--card);border:1px solid var(--border);}
+.coach-week-card{margin:0 16px 12px;padding:14px;border-radius:14px;background:linear-gradient(135deg,#17324d,#102235);border:1px solid rgba(51,169,255,.35);}
+.coach-week-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px;}
+.coach-week-metric{padding:8px 5px;border-radius:9px;background:rgba(255,255,255,.055);text-align:center;}
+.quick-feedback-panel{margin:0 16px 12px;padding:12px;border-radius:13px;background:var(--card);border:1px solid var(--border);}
+.feedback-choice{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:6px;}
+.feedback-choice button{border:1px solid var(--border);background:var(--navy);color:var(--muted);border-radius:8px;padding:8px 2px;font:700 11px Nunito,sans-serif;cursor:pointer;}
+.feedback-choice button.on{background:var(--blue);border-color:var(--blue);color:#fff;}
+.data-safety-card{margin:0 16px 16px;background:var(--card);border:1px solid rgba(51,169,255,.35);border-radius:16px;padding:15px;}
+.auth-gate{position:fixed;inset:0;z-index:1000;background:linear-gradient(160deg,#0f1923,#14283d);display:flex;align-items:center;justify-content:center;padding:22px;}
+.auth-card{width:min(430px,100%);background:var(--card);border:1px solid rgba(51,169,255,.35);border-radius:20px;padding:22px;box-shadow:0 24px 70px rgba(0,0,0,.45);}
+.readonly-banner{display:none;position:sticky;top:0;z-index:120;background:#173a55;color:#d8efff;border-bottom:1px solid #2d9cdb;padding:8px 12px;text-align:center;font-size:11px;font-weight:850;}
+body.share-readonly .readonly-banner{display:block;}
+body.share-readonly [data-write-action="true"]{opacity:.38;pointer-events:none;}
+.quality-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 16px 12px;}
+.quality-metric{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:11px 7px;text-align:center;}
+.quality-issue{background:var(--card);border:1px solid var(--border);border-left:4px solid var(--yellow);border-radius:11px;padding:10px 12px;}
+@media(max-width:520px){.quality-grid{grid-template-columns:repeat(2,1fr);}}
+
+/* Badge improvements */
+.run-badge-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;}
+
+</style>
+<!-- Supabase cloud sync enabled: 2026-08-24 -->
+</head>
+<body>
+<div class="readonly-banner" id="readonly-banner">👁️ Vizualizare read-only · link temporar · datele nu pot fi modificate</div>
+<div class="auth-gate" id="auth-gate" style="display:none;">
+  <div class="auth-card">
+    <div style="font-size:34px;margin-bottom:8px;">🔐</div>
+    <div style="font-size:20px;font-weight:900;color:var(--white);">Acces proprietar</div>
+    <div style="font-size:12px;line-height:1.5;color:var(--muted);margin:6px 0 16px;">Conectează-te direct în această aplicație. Sesiunea va rămâne salvată separat în shortcut-ul de pe Home Screen.</div>
+    <label class="log-label" for="auth-email">E-mail</label>
+    <input class="log-input" id="auth-email" type="email" autocomplete="email" placeholder="adresa ta de e-mail" style="width:100%;box-sizing:border-box;">
+    <label class="log-label" for="auth-password" style="margin-top:10px;">Parolă</label>
+    <input class="log-input" id="auth-password" type="password" autocomplete="current-password" placeholder="parola Run Leo" style="width:100%;box-sizing:border-box;" onkeydown="if(event.key==='Enter')signInOwnerWithPassword()">
+    <button class="btn btn-blue" id="auth-login-button" style="width:100%;justify-content:center;margin-top:10px;" onclick="signInOwnerWithPassword()">Conectează-mă</button>
+    <button class="btn btn-card btn-sm" id="auth-link-button" style="width:100%;justify-content:center;margin-top:8px;" onclick="sendOwnerMagicLink()">Trimite link de recuperare</button>
+    <div id="auth-status" style="font-size:11px;line-height:1.45;color:var(--muted);margin-top:10px;"></div>
+  </div>
+</div>
+<div class="log-overlay" id="owner-password-modal" style="display:none;" onclick="if(event.target===this)closeOwnerPasswordModal()">
+  <div class="log-sheet">
+    <div class="log-handle"></div>
+    <div class="log-title">Setează parola Run Leo</div>
+    <div class="log-sub">Parola nu este salvată în fișierul aplicației. Supabase păstrează doar forma ei protejată.</div>
+    <div class="log-field"><label class="log-label" for="owner-new-password">Parolă nouă</label><input class="log-input" id="owner-new-password" type="password" autocomplete="new-password" minlength="12" placeholder="minimum 12 caractere"></div>
+    <div class="log-field"><label class="log-label" for="owner-repeat-password">Repetă parola</label><input class="log-input" id="owner-repeat-password" type="password" autocomplete="new-password" minlength="12" placeholder="repetă parola"></div>
+    <div id="owner-password-status" style="font-size:11px;color:var(--muted);line-height:1.45;margin-top:6px;"></div>
+    <div class="log-btns"><button class="log-btn log-cancel" onclick="closeOwnerPasswordModal()">Anulează</button><button class="log-btn log-save" id="owner-password-save" onclick="saveOwnerPassword()">Salvează parola</button></div>
+  </div>
+</div>
+<nav class="bnav">
+  <button class="bnav-btn on" onclick="showPage('today',this)"><span class="bnav-icon">🏃</span>Azi</button>
+  <button class="bnav-btn" onclick="showPage('plan',this)"><span class="bnav-icon">📅</span>Plan</button>
+  <button class="bnav-btn" onclick="showPage('stats',this)"><span class="bnav-icon">📊</span>Stats</button>
+  <button class="bnav-btn" onclick="showPage('rules',this)"><span class="bnav-icon">⚡</span>Reguli</button>
+</nav>
+
+<div class="page on" id="page-today">
+  <div class="hero">
+    <div class="hero-label">Run Leo</div>
+    <div class="hero-title" id="hero-date">Buna ziua! <span>💪</span></div>
+    <div class="hero-sub" id="hero-sub"></div>
+  </div>
+  <div id="today-content" style="padding-top:4px;"></div>
+</div>
+
+<div class="page" id="page-plan">
+  <div class="hero">
+    <div class="hero-label">1 Iun 2026 – 30 Mai 2027 · Semimaraton</div>
+    <div class="hero-title">Planul <span>Tau</span></div>
+  </div>
+  <div style="height:12px;"></div>
+  <div class="week-strip" id="week-strip"></div>
+  <div class="days-list" id="week-days"></div>
+</div>
+
+<div class="page" id="page-stats">
+  <div class="hero">
+    <div class="hero-label">Progres</div>
+    <div class="hero-title">Statistici <span>🔥</span></div>
+  </div>
+  <div class="stats-tabs">
+    <button class="stats-tab on" onclick="switchStatsTab('overview',this)">📊 General</button>
+    <button class="stats-tab" onclick="switchStatsTab('progress',this)">📈 Progres</button>
+    <button class="stats-tab" onclick="switchStatsTab('longruns',this)">🏃 Comparativ</button>
+    <button class="stats-tab" onclick="switchStatsTab('history',this)">📋 Istoric Runs</button>
+    <button class="stats-tab" onclick="switchStatsTab('paceplan',this)">📐 Plan Pace</button>
+    <button class="stats-tab" onclick="switchStatsTab('fitlog',this)">💪 Fitness & Mușchi</button>
+    <button class="stats-tab" onclick="switchStatsTab('health',this)">⚖️ Sănătate</button>
+    <button class="stats-tab" onclick="switchStatsTab('check',this)">⚠️ Verificare</button>
+    <button class="stats-tab" onclick="switchStatsTab('quality',this)">🛡️ Calitatea datelor</button>
+  </div>
+  <div id="stats-content"></div>
+</div>
+
+<div class="page" id="page-rules">
+  <div class="hero">
+    <div class="hero-label">Non-negociabile</div>
+    <div class="hero-title">Reguli <span>⚡</span></div>
+  </div>
+  <div style="height:8px;"></div>
+  <div class="rule-card" style="border:1px solid rgba(0,200,150,.45);">
+    <div class="rule-icon">🎯</div>
+    <div><b>Structură stabilă, verificată ca ansamblu</b><br><span>Din S16: 4 alergări, o singură sesiune grea, două zile fără alergare și deload real la fiecare a patra săptămână. Pragul de 21,1 km este condiționat de 18K, 19K și 20K fără durere și de recuperare normală; nu este un termen-limită. Dacă prima fereastră nu este potrivită, următoarea se alege după un deload, în locul unui long run de 15K. După atingere, long run-ul rămâne la maximum 15 km, iar accentul trece pe pace 5–10K, tehnică, dealuri și trail ușor.</span></div>
+  </div>
+  <div class="rule-card" style="border:1px solid rgba(51,169,255,.45);">
+    <div class="rule-icon">🦶</div>
+    <div><b>Adaptare pentru robustețe în alergare</b><br><span>Single-Leg RDL, Single-Leg Calf Raise și varianta cu genunchiul flexat pentru soleus au înlocuit exerciții sau finishere redundante. Scopul este întărirea gambei și gleznei și îmbunătățirea controlului unilateral în zona unde se observă pronația, nu corectarea forțată a pronației. Strides rămân neschimbate.</span></div>
+  </div>
+  <div id="rules-content"></div>
+</div>
+
+<div class="page" id="page-workout">
+  <div class="wk-back" onclick="goBack()"><span>←</span><span>Inapoi</span></div>
+  <div class="wk-page-title" id="wk-page-title"></div>
+  <div id="wk-content"></div>
+</div>
+
+<div class="log-overlay" id="log-modal" style="display:none;" onclick="if(event.target===this)closeLog()">
+  <div class="log-sheet">
+    <div class="log-handle"></div>
+    <div class="log-title" id="log-title">Logheaza Run</div>
+    <div class="log-sub" id="log-sub"></div>
+    <div class="log-field" id="extra-run-type-field" style="display:none;margin-bottom:12px;">
+      <label class="log-label">Tipul alergării</label>
+      <select class="log-input" id="lf-runType" style="width:100%;" onchange="updateExtraRunFields()">
+        <option value="free" selected>🆓 Free Run</option>
+        <option value="easy">🚶 Easy Run</option>
+        <option value="recovery">🌿 Recovery Run</option>
+        <option value="tempo">🔥 Tempo Run</option>
+        <option value="interval">⚡ Intervale</option>
+        <option value="hills">⛰️ Dealuri</option>
+        <option value="trail">🌲 Trail</option>
+        <option value="pb">🏁 Test PB</option>
+        <option value="long">🏃 Long Run</option>
+      </select>
+    </div>
+    <div class="log-field" id="run-route-mode-field" style="margin-bottom:12px;">
+      <label class="log-label">De unde ai început alergarea?</label>
+      <select class="log-input" id="lf-routeMode" style="width:100%;" onchange="updateRouteModeHint()">
+        <option value="home_elevation">🏠 Direct de acasă — coborâre + porțiune plată</option>
+        <option value="park_flat">🌳 Mers până în parc — alergare exclusiv pe plat</option>
+        <option value="legacy_auto">🕘 Nespecificat — păstrează calculul istoric</option>
+      </select>
+      <div id="route-mode-hint" style="font-size:10px;color:var(--muted);line-height:1.4;margin-top:5px;"></div>
+      <div id="route-mode-recalc" style="display:none;font-size:10px;line-height:1.4;margin-top:5px;padding:6px 8px;border-radius:7px;"></div>
+    </div>
+    <input type="file" id="fit-file-input" accept=".fit" style="display:none;" onchange="handleFitUpload(event)">
+    <button class="btn btn-card" style="width:100%;justify-content:center;margin-bottom:12px;" onclick="document.getElementById('fit-file-input').click()">📁 Importă din fișier Garmin (.fit)</button>
+    <div id="fit-import-status" style="display:none;font-size:12px;border-radius:10px;padding:8px 12px;margin-bottom:12px;"></div>
+    <div class="log-grid">
+      <div class="log-field"><label class="log-label">Pace /km</label><input class="log-input" id="lf-pace" placeholder="6:59" oninput="autoCalcTime()"></div>
+      <div class="log-field"><label class="log-label">Distanta km</label><input class="log-input" id="lf-dist" placeholder="5.02" oninput="autoCalcTime()"></div>
+    </div>
+    <div class="log-grid">
+      <div class="log-field"><label class="log-label">Puls mediu</label><input class="log-input" id="lf-hr" placeholder="147"></div>
+      <div class="log-field"><label class="log-label">Puls max</label><input class="log-input" id="lf-hrmax" placeholder="159"></div>
+    </div>
+    <div class="log-grid">
+      <div class="log-field"><label class="log-label">Cadenta spm</label><input class="log-input" id="lf-spm" placeholder="156"></div>
+      <div class="log-field"><label class="log-label">Timp total <span style="font-weight:400;color:var(--muted);">(auto din pace×dist)</span></label><input class="log-input" id="lf-time" placeholder="42:03"></div>
+    </div>
+    <div class="log-grid" id="run-segment-fields">
+      <div class="log-field"><label class="log-label">Pace mediu segment tempo/interval</label><input class="log-input" id="lf-segmentPace" placeholder="5:42"></div>
+      <div class="log-field"><label class="log-label">HR mediu segment tempo/interval</label><input class="log-input" id="lf-segmentHr" type="number" min="1" max="255" placeholder="158"></div>
+      <div class="log-field"><label class="log-label">Best pace segment tempo/interval</label><input class="log-input" id="lf-bestPace" placeholder="5:20"></div>
+    </div>
+    <div class="log-grid" id="strides-fields" style="display:none;">
+      <div class="log-field"><label class="log-label">Repetări</label><input class="log-input" id="lf-strideReps" placeholder="4×100m"></div>
+      <div class="log-field"><label class="log-label">Cel mai bun 100m (sec)</label><input class="log-input" id="lf-strideBest" type="number" step="0.01" placeholder="18.01"></div>
+      <div class="log-field"><label class="log-label">Media pe 100m (sec)</label><input class="log-input" id="lf-strideAvg" type="number" step="0.01" placeholder="18.66"></div>
+    </div>
+    <div class="log-field" style="margin-bottom:0"><label class="log-label">Note</label><input class="log-input" id="lf-note" placeholder="Plat, bine..."></div>
+    <div class="log-btns">
+      <button class="log-btn log-cancel" onclick="closeLog()">Anuleaza</button>
+      <button class="log-btn log-save" id="run-log-save-button" onclick="saveLog()">Salveaza ✓</button>
+    </div>
+  </div>
+</div>
+
+<div class="log-overlay" id="feedback-modal" style="display:none;" onclick="if(event.target===this)closeQuickFeedback()">
+  <div class="log-sheet" style="max-height:92vh;overflow-y:auto;">
+    <div class="log-handle"></div>
+    <div class="log-title">📝 Feedback rapid</div>
+    <div class="log-sub" id="feedback-sub"></div>
+    <input type="hidden" id="feedback-rpe" value="">
+    <div class="log-label" id="feedback-rpe-label">RPE — cât de greu a fost?</div>
+    <div class="feedback-choice" id="feedback-rpe-buttons"></div>
+    <div class="log-field" style="margin-top:12px;"><label class="log-label" id="feedback-legs-label">Cum au fost picioarele?</label><select class="log-input" id="feedback-legs"></select></div>
+    <div class="log-field"><label class="log-label" id="feedback-pain-label">Durere sau disconfort</label><select class="log-input" id="feedback-pain"><option value="none">Nu</option><option value="light">Ușor</option><option value="relevant">Relevant</option></select></div>
+    <div class="log-grid" id="feedback-context-grid">
+      <div class="log-field" id="feedback-terrain-field"><label class="log-label" id="feedback-terrain-label">Traseu</label><select class="log-input" id="feedback-terrain"></select></div>
+      <div class="log-field" id="feedback-conditions-field"><label class="log-label" id="feedback-conditions-label">Condiții</label><select class="log-input" id="feedback-conditions"></select></div>
+    </div>
+    <div class="log-field" id="feedback-fueling-field"><label class="log-label" id="feedback-fueling-label">Alimentație / stomac</label><select class="log-input" id="feedback-fueling"><option value="na">Nu se aplică</option><option value="ok">Fără probleme</option><option value="issue">Au existat probleme</option></select></div>
+    <div class="log-field"><label class="log-label">Notă scurtă (opțional)</label><input class="log-input" id="feedback-note" placeholder="Ex: picioare obosite înainte de start"></div>
+    <div class="log-btns"><button class="log-btn log-cancel" onclick="closeQuickFeedback()">Anulează</button><button class="log-btn log-save" onclick="saveQuickFeedback()">Salvează ✓</button></div>
+  </div>
+</div>
+
+<div class="log-overlay" id="distance-ranking-modal" style="display:none;" onclick="if(event.target===this)closeDistanceRanking()">
+  <div class="log-sheet" style="padding:20px 18px 24px;max-height:88vh;overflow-y:auto;">
+    <div class="log-handle"></div>
+    <div class="log-title" id="distance-ranking-title">🏆 Top 10</div>
+    <div class="log-sub">Cele mai rapide segmente calculate din fișierele Garmin FIT</div>
+    <div id="distance-ranking-content" style="display:flex;flex-direction:column;gap:8px;margin-top:16px;"></div>
+    <button type="button" class="log-btn log-cancel" style="width:100%;margin-top:16px;" onclick="closeDistanceRanking()">Închide</button>
+  </div>
+</div>
+
+<div class="log-overlay" id="comparative-score-modal" style="display:none;" onclick="if(event.target===this)closeComparativeScore()">
+  <div class="log-sheet" style="padding:20px 18px 24px;max-height:90vh;overflow-y:auto;">
+    <div class="log-handle"></div>
+    <div class="log-title" id="comparative-score-title">📊 Fișa scorului</div>
+    <div class="log-sub" id="comparative-score-sub"></div>
+    <div id="comparative-score-content" style="display:flex;flex-direction:column;gap:10px;margin-top:16px;"></div>
+    <button type="button" class="log-btn log-cancel" style="width:100%;margin-top:16px;" onclick="closeComparativeScore()">Închide</button>
+  </div>
+</div>
+
+<div class="log-overlay" id="pace-review-modal" style="display:none;" onclick="if(event.target===this)closePaceCycleReview()">
+  <div class="log-sheet" style="padding:20px 18px 24px;max-height:92vh;overflow-y:auto;">
+    <div class="log-handle"></div>
+    <div class="log-title">🧠 Analiza ciclului 3+1</div>
+    <div class="log-sub" id="pace-review-sub"></div>
+    <div id="pace-review-content" style="display:flex;flex-direction:column;gap:10px;margin-top:16px;"></div>
+    <div class="log-btns" id="pace-review-actions">
+      <button type="button" class="log-btn log-cancel" onclick="keepPaceCycleReview()">↔️ Păstrează încă un ciclu</button>
+      <button type="button" class="log-btn log-save" onclick="applyPaceCycleReview()">✅ Aplică recomandarea</button>
+    </div>
+    <button type="button" class="log-btn log-cancel" style="width:100%;margin-top:9px;" onclick="closePaceCycleReview()">Închide</button>
+  </div>
+</div>
+
+<div class="log-overlay" id="cooldown-modal" style="display:none;" onclick="if(event.target===this)closeCooldown()">
+  <div class="log-sheet" style="padding:20px 20px 24px;">
+    <div class="log-handle"></div>
+    <div class="log-title">🧘 Rutina de Răcire</div>
+    <div class="log-sub">Aplicabilă după orice run — easy, tempo sau long run</div>
+    <div id="cooldown-content" style="display:flex;flex-direction:column;gap:14px;margin-top:16px;"></div>
+    <div style="margin-top:16px;padding:12px 14px;background:rgba(0,200,150,0.08);border:1px solid rgba(0,200,150,0.25);border-radius:12px;font-size:12px;color:var(--mint);">
+      💡 Ordinea contează: mers lent întâi (puls jos), apoi stretch static.
+    </div>
+    <button class="log-btn log-cancel" style="width:100%;margin-top:16px;" onclick="closeCooldown()">Închide</button>
+  </div>
+</div>
+
+<div class="log-overlay" id="fitnote-modal" style="display:none;" onclick="if(event.target===this)closeFitnessNote()">
+  <div class="log-sheet">
+    <div class="log-handle"></div>
+    <div class="log-title">📝 Notă Progres Fitness</div>
+    <div class="log-sub">Text liber — progres greutate, senzații, ce a mers/nu a mers</div>
+    <textarea class="log-input" id="fitnote-text" placeholder="Ex: Dumbbell Press simțit ușor la 3×12, cresc la 4×10 data viitoare..." style="width:100%;min-height:110px;resize:vertical;font-family:'Nunito',sans-serif;font-size:14px;line-height:1.4;margin-top:4px;"></textarea>
+    <div class="log-btns">
+      <button class="log-btn log-cancel" onclick="closeFitnessNote()">Anuleaza</button>
+      <button class="log-btn log-save" onclick="saveFitnessNote()">Salveaza ✓</button>
+    </div>
+  </div>
+</div>
+
+<div class="log-overlay" id="fitness-exercise-guide-modal" style="display:none;" onclick="if(event.target===this)closeFitnessExerciseGuide()">
+  <div class="log-sheet" id="fitness-exercise-guide-sheet" style="max-height:94vh;padding:18px 18px 22px;">
+    <div class="log-handle"></div>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:4px;">
+      <div class="log-title" id="fitness-exercise-guide-title" style="margin-bottom:0;line-height:1.2;"></div>
+      <button type="button" class="btn btn-card btn-icon" aria-label="Închide imaginea" onclick="closeFitnessExerciseGuide()">✕</button>
+    </div>
+    <div class="log-sub" style="margin-bottom:12px;">Imagine orientativă pentru poziția și execuția exercițiului.</div>
+    <div id="fitness-exercise-guide-images" style="display:flex;flex-direction:column;gap:10px;"></div>
+    <button type="button" class="log-btn log-cancel" style="width:100%;margin-top:14px;color:var(--white);" onclick="closeFitnessExerciseGuide()">← Înapoi la descrierea exercițiului</button>
+  </div>
+</div>
+
+<div class="log-overlay" id="fit-fitness-modal" style="display:none;" onclick="if(event.target===this)closeFitFitness()">
+  <div class="log-sheet">
+    <div class="log-handle"></div>
+    <div class="log-title">📁 Import Fitness din Garmin (.fit)</div>
+    <div class="log-sub" id="fit-fitness-sub">Selectează fișierul .fit exportat din Garmin Connect</div>
+    <input type="file" id="fit-fitness-input" accept=".fit" style="display:none;" onchange="handleFitFitnessUpload(event)">
+    <button class="btn btn-blue" style="width:100%;justify-content:center;margin-bottom:12px;" onclick="document.getElementById('fit-fitness-input').click()">📂 Alege fișier .fit</button>
+    <div id="fit-fitness-status" style="display:none;font-size:12px;border-radius:10px;padding:10px 12px;margin-bottom:12px;"></div>
+    <div id="fit-fitness-result" style="display:none;">
+      <div style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Rezumat sesiune</div>
+      <div id="fit-fitness-summary" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--mint);line-height:1.8;margin-bottom:12px;"></div>
+      <div style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Exerciții detectate</div>
+      <div id="fit-fitness-exercises" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;"></div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Notă suplimentară (opțional)</div>
+      <textarea class="log-input" id="fit-fitness-note" placeholder="Observații, senzații..." style="width:100%;min-height:60px;resize:vertical;font-family:'Nunito',sans-serif;font-size:13px;line-height:1.4;margin-bottom:4px;"></textarea>
+    </div>
+    <div class="log-btns">
+      <button class="log-btn log-cancel" onclick="closeFitFitness()">Anulează</button>
+      <button class="log-btn log-save" id="fit-fitness-save" style="display:none;" onclick="saveFitFitness()">Salvează ✓</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js?v=20260919-14" defer></script>
+</body>
+</html>
